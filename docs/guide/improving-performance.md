@@ -155,6 +155,8 @@ NODE_COMPILE_CACHE=node_modules/.cache/node-compile-cache vitest
 
 The first run with an empty directory pays for serializing the compiled modules, so this is only worth enabling when the directory survives between runs: local runs, or CI pipelines that cache the directory. `NODE_DISABLE_COMPILE_CACHE=1` disables the cache entirely, taking precedence over `NODE_COMPILE_CACHE`.
 
+On Linux, Vitest turns on the compile cache automatically in the `forks` pool when there are at least 10 test files per worker. Each test file runs in a new process, so later processes reuse the code that earlier processes compiled. Vitest deletes the cache when it exits. Set `NODE_DISABLE_COMPILE_CACHE=1` to turn it off. On macOS and Windows, the many small cache files make runs slower, so Vitest does not do this there.
+
 Note that Vitest automatically disables the compile cache in workers when the `v8` coverage provider is enabled — V8 serializes cached scripts without the source positions that precise coverage relies on.
 
 ## Pool

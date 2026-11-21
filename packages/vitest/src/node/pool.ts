@@ -6,10 +6,11 @@ import type { PoolTask } from './pools/types'
 import type { TestProject } from './project'
 import type { TestSpecification } from './test-specification'
 import type { ResolvedConfig } from './types/config'
+import { existsSync } from 'node:fs'
 import * as nodeos from 'node:os'
 import process from 'node:process'
 import { isatty } from 'node:tty'
-import { resolve } from 'pathe'
+import { join, resolve } from 'pathe'
 import { version as viteVersion } from 'vite'
 import { rootDir } from '../paths'
 import { isWindows } from '../utils/env'
@@ -19,6 +20,8 @@ import { createBrowserPool } from './pools/browser'
 import { Pool } from './pools/pool'
 
 const suppressWarningsPath = resolve(rootDir, './suppress-warnings.cjs')
+
+const COMPILE_CACHE_MIN_FILES_PER_WORKER = 10
 
 type RunWithFiles = (files: TestSpecification[], invalidates?: string[]) => Promise<void>
 
@@ -75,6 +78,7 @@ export function createPool(ctx: Vitest): ProcessPool {
 
     const projectEnvs = new WeakMap<TestProject, Partial<NodeJS.ProcessEnv>>()
     const projectExecArgvs = new WeakMap<TestProject, string[]>()
+    const forksFiles = countForksFiles(specs)
 
     for (const group of groups) {
       if (!group) {
@@ -119,6 +123,26 @@ export function createPool(ctx: Vitest): ProcessPool {
           if (ctx.config.coverage.enabled && ctx.config.coverage.provider !== 'istanbul') {
             delete env.NODE_COMPILE_CACHE
             env.NODE_DISABLE_COMPILE_CACHE = '1'
+          }
+
+          // Node reads the variable when the worker starts, so the cache also covers
+          // Vitest itself, and the worker removes it. The first workers only write
+          // the cache, so it pays off only with enough test files for each worker.
+          // On macOS and Windows, the file operations for one cache file per
+          // module cost more than the cache saves.
+          const compileCacheDir = join(project.tmpDir, 'compile-cache')
+          if (
+            process.platform === 'linux' &&
+            pool === 'forks' &&
+            project.config.isolate &&
+            !env.NODE_COMPILE_CACHE &&
+            !env.NODE_DISABLE_COMPILE_CACHE &&
+            ((forksFiles.get(project) ?? 0) >=
+              COMPILE_CACHE_MIN_FILES_PER_WORKER * project.config.maxWorkers ||
+              existsSync(compileCacheDir))
+          ) {
+            env.NODE_COMPILE_CACHE = compileCacheDir
+            env.VITEST_INTERNAL_COMPILE_CACHE = '1'
           }
 
           // env are case-insensitive on Windows, but spawned processes don't support it
@@ -306,6 +330,16 @@ function getMemoryLimit(config: ResolvedConfig, pool: string) {
 
   // just ignore "memoryLimit" value because we cannot detect memory limit
   return null
+}
+
+function countForksFiles(specs: TestSpecification[]) {
+  const counts = new Map<TestProject, number>()
+  for (const spec of specs) {
+    if (spec.pool === 'forks') {
+      counts.set(spec.project, (counts.get(spec.project) ?? 0) + 1)
+    }
+  }
+  return counts
 }
 
 function groupSpecs(

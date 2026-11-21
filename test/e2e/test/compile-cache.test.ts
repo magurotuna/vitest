@@ -1,7 +1,8 @@
+import type { TestModule } from 'vitest/node'
 import { existsSync, readdirSync, rmSync, statSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { expect, test } from 'vitest'
-import { runVitestCli } from '../../test-utils'
+import { runInlineTests, runVitestCli } from '../../test-utils'
 
 const fixture = resolve(import.meta.dirname, '../fixtures/compile-cache')
 const cacheDir = resolve(fixture, 'node_modules/.cache/compile-cache-test')
@@ -86,4 +87,59 @@ test('the cache is stripped from workers when v8 coverage is enabled', async () 
   // worker's jsdom graph must not reach the cache
   const entries = existsSync(cacheDir) ? cacheEntries() : []
   expect(entries.length).toBeLessThan(300)
+})
+
+const probe = `
+import module from 'node:module'
+import { test } from 'vitest'
+
+test('probe', ({ task }) => {
+  const cache = module.getCompileCacheDir() ? 'on' : 'off'
+  const variables = [process.env.NODE_COMPILE_CACHE, process.env.VITEST_INTERNAL_COMPILE_CACHE].filter(Boolean)
+  task.meta.probe = 'cache ' + cache + ', variables ' + variables.length
+})
+`
+
+function probeFiles(count: number) {
+  return Object.fromEntries(Array.from({ length: count }, (_, i) => [`probe-${i}.test.js`, probe]))
+}
+
+function probeResults(modules: readonly TestModule[]) {
+  const results = modules.flatMap((module) =>
+    Array.from(module.children.allTests(), (test) => (test.meta() as { probe?: string }).probe),
+  )
+  return [...new Set(results)]
+}
+
+async function rerunFirstProbe(result: Awaited<ReturnType<typeof runInlineTests>>) {
+  const file = result.fs.resolveFile('probe-0.test.js')
+  const { testModules } = await result.ctx!.runTestSpecifications(
+    result.ctx!.getModuleSpecifications(file),
+  )
+  return probeResults(testModules.filter((module) => module.moduleId === file))
+}
+
+// the shared cache is used only on Linux
+const cacheWithTenFiles = process.platform === 'linux' ? 'cache on' : 'cache off'
+
+test.for([
+  [10, `${cacheWithTenFiles}, variables 0`],
+  [9, 'cache off, variables 0'],
+] as const)('%i test files for each worker in watch mode: %s', async ([count, expected]) => {
+  const result = await runInlineTests(probeFiles(count), { pool: 'forks', watch: true })
+
+  expect(result.stderr).toBe('')
+  expect(probeResults(result.results)).toEqual([expected])
+  // a rerun of one file uses the cache only if the previous run created it
+  expect(await rerunFirstProbe(result)).toEqual([expected])
+})
+
+test.for([
+  ['isolate: false', { isolate: false }],
+  ['NODE_DISABLE_COMPILE_CACHE', { env: { NODE_DISABLE_COMPILE_CACHE: '1' } }],
+] as const)('%s keeps the shared compile cache off', async ([, config]) => {
+  const { stderr, results } = await runInlineTests(probeFiles(10), { pool: 'forks', ...config })
+
+  expect(stderr).toBe('')
+  expect(probeResults(results)).toEqual(['cache off, variables 0'])
 })

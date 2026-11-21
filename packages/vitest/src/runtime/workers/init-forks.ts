@@ -2,6 +2,12 @@ import type { WorkerGlobalState, WorkerSetupContext } from '../../types/worker'
 import type { Traces } from '../../utils/traces'
 import { init } from './init'
 
+// the pool sets these only for Node to enable the compile cache on startup
+if (process.env.VITEST_INTERNAL_COMPILE_CACHE) {
+  delete process.env.NODE_COMPILE_CACHE
+  delete process.env.VITEST_INTERNAL_COMPILE_CACHE
+}
+
 if (!process.send) {
   throw new Error('Expected worker to be run in node:child_process')
 }
