@@ -65,7 +65,7 @@ function loadedHappyDom() {
 }
 `
 
-// `server.deps.inline: true` evaluates the files of happy-dom in the module runner, which fails without this option too
+// with `server.deps.inline: true`, the `url` import of happy-dom gets the npm `url` package of this repository, with or without this option
 const createIdentityTest = ({ pathDep = true } = {}) => `
 import * as happyDom from 'happy-dom'
 import * as esmDep from 'esm-dep'
