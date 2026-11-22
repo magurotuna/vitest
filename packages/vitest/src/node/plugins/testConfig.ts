@@ -20,6 +20,7 @@ import { mergeConfig } from 'vite'
 import { defaultPort } from '../../constants'
 import { escapeRegExp } from '../../utils/base'
 import { resolveApiServerConfig } from '../config/resolveConfig'
+import { preBundleEnvironmentName } from './preBundleEnvironment'
 import { deleteDefineConfig, normalizeUIOptions } from './utils'
 
 // `name` must stay unique per project, `projects` would redefine the whole
@@ -191,7 +192,11 @@ export function TestConfigPlugin(
       configEnvironment: {
         order: 'post',
         handler(name, config) {
-          if (name === '__vitest_vm__' || name === '__vitest__') {
+          if (
+            name === '__vitest_vm__' ||
+            name === '__vitest__' ||
+            name === preBundleEnvironmentName
+          ) {
             return
           }
           // In browser mode the `client` environment is browser-managed

@@ -169,6 +169,13 @@ export interface SerializedConfig {
     nodeLoader: boolean
     recordDependencies: boolean
     traceTimeline: boolean
+    preBundledHappyDom:
+      | {
+          file: string
+          entry: string
+          packageDir: string | undefined
+        }
+      | undefined
     openTelemetry:
       | {
           enabled: boolean

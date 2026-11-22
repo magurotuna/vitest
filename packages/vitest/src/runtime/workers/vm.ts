@@ -6,6 +6,7 @@ import { pathToFileURL } from 'node:url'
 import v8 from 'node:v8'
 import { isContext, runInContext } from 'node:vm'
 import { resolve } from 'pathe'
+import { redirectHappyDomImports } from '../../integrations/env/happy-dom-bundle'
 import { loadEnvironment } from '../../integrations/env/loader'
 import { distDir } from '../../paths'
 import { createCustomConsole } from '../console'
@@ -40,6 +41,7 @@ export async function runVmTests(
   const { ctx, rpc } = state
 
   const beforeEnvironmentTime = performance.now()
+  redirectHappyDomImports(ctx.config.experimental.preBundledHappyDom)
   const { environment, loader } = await loadEnvironment(
     ctx.environment.name,
     ctx.config.root,

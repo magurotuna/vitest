@@ -1019,6 +1019,17 @@ export interface InlineConfig {
     nodeLoader?: boolean
 
     /**
+     * Bundle the `happy-dom` package with the Vite dependency optimizer, and load every
+     * `happy-dom` import in the test workers from the bundle. This makes each test file
+     * start faster when the pool imports the environment again for every test file.
+     *
+     * Imports of inner `happy-dom` files, such as `happy-dom/lib/...`, throw an error.
+     * This option needs Node.js 22.15 or later, and it has no effect in browser mode.
+     * @default false
+     */
+    preBundleEnvironment?: boolean
+
+    /**
      * Record `expect.poll`, `vi.waitFor`, and `vi.waitUntil` steps of each test and print them as a timeline when the test fails.
      * Steps of passing tests are dropped without being reported.
      *

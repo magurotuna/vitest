@@ -5,6 +5,7 @@ import { resolve } from 'node:path'
 import { configDefaults } from '../../defaults'
 import { getCoverageFilesDirectory } from '../../utils/coverage'
 import { isAgent, isForceColor } from '../../utils/env'
+import { getPreBundledHappyDom } from '../plugins/preBundleEnvironment'
 
 export function serializeConfig(project: TestProject): SerializedConfig {
   const { config, globalConfig, viteConfig } = project
@@ -151,6 +152,7 @@ export function serializeConfig(project: TestProject): SerializedConfig {
       // browser mode records its own trace through `browser.traceView`
       traceTimeline: !!config.experimental.traceTimeline && !config.browser.enabled,
       openTelemetry: config.experimental.openTelemetry,
+      preBundledHappyDom: getPreBundledHappyDom(project.vite),
     },
     tags: config.tags || [],
     tagsFilter: config.tagsFilter,

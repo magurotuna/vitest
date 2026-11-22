@@ -15,6 +15,7 @@ import {
   ssrModuleExportsKey,
 } from 'vite/module-runner'
 import { isWindows } from '../utils/env'
+import { preBundleEnvironmentName } from './plugins/preBundleEnvironment'
 
 export class VitestResolver {
   public readonly options: ExternalizeOptions
@@ -248,6 +249,11 @@ async function _shouldExternalize(
   options?: ExternalizeOptions,
 ): Promise<string | false | undefined> {
   if (isBuiltin(id)) {
+    return id
+  }
+
+  // the environment imports this bundle natively, so an inlined copy would be a second happy-dom
+  if (id.includes(`/deps_${preBundleEnvironmentName}/`)) {
     return id
   }
 

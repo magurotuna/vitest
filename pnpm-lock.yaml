@@ -87,6 +87,9 @@ catalogs:
     flatted:
       specifier: ^3.4.4
       version: 3.4.4
+    happy-dom:
+      specifier: ^21.0.4
+      version: 21.0.4
     knip:
       specifier: ^6.44.1
       version: 6.44.1
@@ -1326,6 +1329,9 @@ importers:
       flatted:
         specifier: 'catalog:'
         version: 3.4.4
+      happy-dom:
+        specifier: 'catalog:'
+        version: 21.0.4
       inline-dep:
         specifier: file:./deps/vite-ssr-resolve/inline-dep
         version: file:test/e2e/deps/vite-ssr-resolve/inline-dep

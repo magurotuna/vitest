@@ -6,6 +6,7 @@ import type { TestModuleRunner } from '../moduleRunner/testModuleRunner'
 import { runInThisContext } from 'node:vm'
 import * as spyModule from '@vitest/spy'
 import { setupChaiConfig } from '../../integrations/chai/config'
+import { redirectHappyDomImports } from '../../integrations/env/happy-dom-bundle'
 import { loadEnvironment } from '../../integrations/env/loader'
 import { nativeImports } from '../../utils/module-dependencies'
 import { Traces } from '../../utils/traces'
@@ -88,6 +89,8 @@ function recordNativeImport(url: string, parentURL: string): void {
 export async function setupBaseEnvironment(
   context: WorkerSetupContext,
 ): Promise<() => Promise<void>> {
+  // registered before the native loader hooks, so they can still mock `happy-dom`
+  redirectHappyDomImports(context.config.experimental.preBundledHappyDom)
   if (context.config.experimental.viteModuleRunner === false) {
     const { setupNodeLoaderHooks } = await import('./native')
     const recordDependencies = context.config.experimental.recordDependencies

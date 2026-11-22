@@ -32,6 +32,7 @@ import {
   resolveTestConfig,
 } from '../config/resolveConfig'
 import { BrowserLoaderPlugin, createClusterServer } from '../plugins/browserLoader'
+import { preBundleEnvironmentName } from '../plugins/preBundleEnvironment'
 import { resolveTestOptions, TestConfigPlugin } from '../plugins/testConfig'
 import { ProjectRootPlugin, WorkspaceVitestPlugin } from '../plugins/workspace'
 import { TestProject } from '../project'
@@ -619,6 +620,11 @@ function getOwnServerReason(
   }
   if (deps?.moduleDirectories !== undefined) {
     return '`test.deps.moduleDirectories` affects the Vite config'
+  }
+  const preBundleEnvironment = test.experimental?.preBundleEnvironment
+  const serverBundlesHappyDom = preBundleEnvironmentName in context.parentViteConfig.environments
+  if (preBundleEnvironment !== undefined && preBundleEnvironment !== serverBundlesHappyDom) {
+    return '`test.experimental.preBundleEnvironment` affects the Vite config'
   }
   return undefined
 }

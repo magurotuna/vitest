@@ -1020,6 +1020,13 @@ Control whether Vitest uses Vite's module runner to run the code or fallback to 
 
 Controls whether Vitest will use Node.js Loader API to process in-source or mocked files. This has no effect if `viteModuleRunner` is enabled. Disabling this can increase performance. (default: `true`)
 
+### experimental.preBundleEnvironment
+
+- **CLI:** `--experimental.preBundleEnvironment`
+- **Config:** [experimental.preBundleEnvironment](/config/experimental#experimental-prebundleenvironment)
+
+Bundle `happy-dom` with the Vite dependency optimizer and load every `happy-dom` import in the test workers from the bundle. This makes each test file start faster in the `forks` and `threads` pools. Imports of inner `happy-dom` files throw an error. (default: `false`)
+
 ### experimental.traceTimeline
 
 - **CLI:** `--experimental.traceTimeline`

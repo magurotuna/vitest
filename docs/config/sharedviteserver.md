@@ -20,6 +20,7 @@ A project still gets its own Vite server when it defines Vite-level options that
 - [`css`](/config/css)
 - [`deps.moduleDirectories`](/config/deps#deps-moduledirectories)
 - [`deps.optimizer`](/config/deps#deps-optimizer)
+- [`experimental.preBundleEnvironment`](/config/experimental#experimental-prebundleenvironment), if its value differs from the value in the declaring config
 - `mode`
 - [`root`](/config/root)
 

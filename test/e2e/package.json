@@ -35,6 +35,7 @@
     "@vitest/utils": "workspace:*",
     "ansivision": "catalog:",
     "flatted": "catalog:",
+    "happy-dom": "catalog:",
     "inline-dep": "file:./deps/vite-ssr-resolve/inline-dep",
     "jest-image-snapshot": "^6.5.2",
     "magic-string": "catalog:",

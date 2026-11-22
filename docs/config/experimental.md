@@ -504,6 +504,38 @@ If module runner is disabled, Vitest uses a native [Node.js module loader](https
 
 If you don't use these features, you can disable this to improve performance.
 
+## experimental.preBundleEnvironment <Version type="experimental">5.2.0</Version> {#experimental-prebundleenvironment}
+
+- **Type:** `boolean`
+- **Default:** `false`
+- **CLI:** `--experimental.preBundleEnvironment`
+
+Bundles the [`happy-dom`](https://github.com/capricorn86/happy-dom) package into one file with the [Vite dependency optimizer](https://vite.dev/guide/dep-pre-bundling), and loads every `happy-dom` import in the test workers from this file. The `forks` and `threads` pools import the [`happy-dom` environment](/config/environment) again for every test file. With the bundle, Node.js reads one file instead of several hundred files each time, so each test file starts faster.
+
+```ts [vitest.config.ts]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    environment: 'happy-dom',
+    experimental: {
+      preBundleEnvironment: true,
+    },
+  },
+})
+```
+
+Vitest creates the bundle when it starts. Vite stores the bundle in the [`cacheDir`](https://vite.dev/config/shared-options#cachedir) directory, and creates it again only after the lockfile or the Vite config changes.
+
+In the test workers:
+
+- Test files and dependencies that import `happy-dom` get the bundle. In the `forks` and `threads` pools, `instanceof` checks against the classes of the environment pass. In the `vmForks` and `vmThreads` pools, test files run in a separate context, so these checks fail with or without this option.
+- An import of an inner file, such as `happy-dom/lib/PropertySymbol.js`, throws an error, because the bundle does not contain separate inner files. Import from `happy-dom` instead.
+
+::: warning
+This option needs [`module.registerHooks`](https://nodejs.org/api/module.html#moduleregisterhooksoptions), which Node.js 22.15 and later support. On older Node.js versions, Vitest prints a warning and loads `happy-dom` without the bundle. The option has no effect in browser mode.
+:::
+
 ## experimental.preParse <Version type="experimental">4.1.3</Version> {#experimental-preparse}
 
 - **Type:** `boolean`

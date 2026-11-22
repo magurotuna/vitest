@@ -967,6 +967,10 @@ export const cliOptionsConfig: VitestCLIOptions = {
         description:
           'Controls whether Vitest will use Node.js Loader API to process in-source or mocked files. This has no effect if `viteModuleRunner` is enabled. Disabling this can increase performance. (default: `true`)',
       },
+      preBundleEnvironment: {
+        description:
+          'Bundle `happy-dom` with the Vite dependency optimizer and load every `happy-dom` import in the test workers from the bundle. This makes each test file start faster in the `forks` and `threads` pools. Imports of inner `happy-dom` files throw an error. (default: `false`)',
+      },
       traceTimeline: {
         description:
           'Record `expect.poll`, `vi.waitFor`, and `vi.waitUntil` steps of each test and print them as a timeline when the test fails. This has no effect in browser mode. (default: `false`)',

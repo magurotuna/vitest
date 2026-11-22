@@ -1,5 +1,6 @@
 import type { UserConfig, Plugin as VitePlugin } from 'vite'
 import { builtinModules } from 'node:module'
+import { preBundleEnvironmentName } from './preBundleEnvironment'
 import { resolveOptimizerConfig } from './utils'
 
 export function ModuleRunnerTransform(): VitePlugin {
@@ -59,7 +60,7 @@ export function ModuleRunnerTransform(): VitePlugin {
     configEnvironment: {
       order: 'post',
       handler(name, config) {
-        if (name === '__vitest__') {
+        if (name === '__vitest__' || name === preBundleEnvironmentName) {
           return
         }
         // In browser mode the `client` environment (and any other environment
