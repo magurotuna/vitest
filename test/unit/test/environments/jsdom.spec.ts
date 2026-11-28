@@ -369,6 +369,7 @@ test('jsdom global is exposed', () => {
   // @ts-expect-error -- jsdom is not exposed in our types because we use a single tsconfig for all
   const dom = jsdom
   expect(dom).toBeDefined()
+  expect(new dom.window.URL('http://a/').searchParams).toBeInstanceOf(dom.window.URLSearchParams)
   dom.reconfigure({ url: 'https://examples.new.com' })
   expect(location.href).toBe('https://examples.new.com/')
 })

@@ -228,6 +228,15 @@ export default <Environment>{
     const clearWindowErrors = catchWindowErrors(global)
     const utils = createCompatUtils(dom.window)
 
+    for (const key of ['Request', 'URL']) {
+      const descriptor = Object.getOwnPropertyDescriptor(global, key)
+      if (descriptor && !keys.has(key)) {
+        originals.set(key, descriptor)
+      } else {
+        keys.add(key)
+      }
+    }
+
     global.jsdom = dom
     global.Request = createCompatRequest(utils)
     global.URL = createJSDOMCompatURL(utils)
@@ -246,7 +255,8 @@ export default <Environment>{
 }
 
 function createCompatRequest(utils: CompatUtils) {
-  class Request extends NodeRequest_ {
+  const NodeRequest = NodeRequest_
+  class Request extends NodeRequest {
     constructor(...args: [input: RequestInfo, init?: RequestInit]) {
       const [input, init] = args
       if (init?.body != null) {
@@ -264,7 +274,7 @@ function createCompatRequest(utils: CompatUtils) {
     }
 
     static [Symbol.hasInstance](instance: unknown): boolean {
-      return instance instanceof NodeRequest_
+      return instance instanceof NodeRequest
     }
   }
   return Request
